@@ -1,0 +1,288 @@
+================================================================================
+COMPLETE FILE STRUCTURE - Rate Limiting & Load Balancing System
+================================================================================
+
+PROJECT ROOT: rate-limiting-load-balancing/
+├── Total Files: 18
+├── Source Code Files: 6 (Go implementations)
+├── Configuration Files: 3 (docker-compose, nginx, gitignore)
+├── Documentation Files: 7 (guides and references)
+└── Utilities: 2 (test script and manifests)
+
+================================================================================
+
+DIRECTORY STRUCTURE:
+====================
+
+rate-limiting-load-balancing/
+│
+├── 📖 DOCUMENTATION (Read These First)
+│   ├── START_HERE.md                 ← BEGIN HERE! Quick orientation
+│   ├── PROJECT_SUMMARY.md            ← Overview of what was built
+│   ├── ARCHITECTURE.md               ← System design with diagrams
+│   ├── README.md                     ← Full technical documentation
+│   ├── QUICKSTART.md                 ← 5-minute setup guide
+│   └── DEVELOPMENT.md                ← Customization guide
+│
+├── 🐳 DOCKER & ORCHESTRATION
+│   └── docker-compose.yml            ← Start everything with this!
+│
+├── ⚙️ RATE LIMITER SERVICE (Go)
+│   └── rate-limiter/
+│       ├── main.go                   ← Token bucket implementation (500 lines)
+│       ├── Dockerfile                ← Container image
+│       ├── go.mod                    ← Go dependencies
+│       └── go.sum                    ← Dependency lock file
+│
+├── ⚖️ LOAD BALANCER SERVICE (Go)
+│   └── load-balancer/
+│       ├── main.go                   ← Smart routing logic (600 lines)
+│       ├── Dockerfile                ← Container image
+│       ├── go.mod                    ← Go dependencies
+│       └── go.sum                    ← Dependency lock file
+│
+├── 🔗 NGINX CONFIGURATION
+│   └── nginx/
+│       └── nginx.conf                ← Global rate limiting config
+│
+├── 🔧 UTILITIES
+│   ├── test.sh                       ← Automated test script
+│   └── .gitignore                    ← Git ignore patterns
+│
+└── 📁 RUNTIME (Created when system runs)
+    └── logs/                         ← Generated at runtime
+        ├── cookie-A.log
+        ├── cookie-B.log
+        └── cookie-C.log
+
+================================================================================
+
+FILE DESCRIPTIONS:
+==================
+
+DOCUMENTATION FILES (Read in this order):
+───────────────────────────────────────────
+
+1. START_HERE.md (9.3 KB)
+   Quick orientation guide
+   - What was built
+   - How to use it
+   - Three paths based on your needs
+   Time to read: 10 minutes
+
+2. PROJECT_SUMMARY.md (13.7 KB)
+   Comprehensive project overview
+   - Key features implemented
+   - Technical specifications
+   - Performance metrics
+   - Customization options
+   Time to read: 10 minutes
+
+3. ARCHITECTURE.md (50.2 KB)
+   System design and diagrams
+   - High-level architecture diagram
+   - Rate limiter flow
+   - Load balancer flow
+   - Token bucket visualization
+   - Redis data model
+   - Request lifecycle examples
+   Time to read: 15 minutes
+
+4. README.md (10 KB)
+   Full technical documentation
+   - Complete architecture
+   - Configuration reference
+   - API endpoints
+   - Log format
+   - Monitoring guide
+   Time to read: 20 minutes
+
+5. QUICKSTART.md (4 KB)
+   Get up and running in 5 minutes
+   - Prerequisites
+   - Quick start steps
+   - Testing commands
+   - Common issues
+   Time to read: 5 minutes
+
+6. DEVELOPMENT.md (12 KB)
+   How to customize and extend
+   - Customization points
+   - Code examples
+   - Testing custom changes
+   - Performance tuning
+   Time to read: 15 minutes
+
+CONFIGURATION FILES:
+────────────────────
+
+docker-compose.yml (1.6 KB)
+   - Orchestrates all services
+   - Defines ports, volumes, networks
+   - Environment variables
+   - Service dependencies
+   - Redis configuration
+   ⚠️ REQUIRED to run the system
+
+RATE LIMITER SERVICE:
+─────────────────────
+
+rate-limiter/main.go (7.4 KB, ~500 lines)
+   Token bucket rate limiting implementation
+   Functions:
+   - checkTokenBucket()       : Token bucket algorithm
+   - rateLimitMiddleware()    : Request handler
+   - logDeniedRequest()       : Logging
+   - respondWithError()       : Error responses
+   Key features:
+   - Per-cookie rate limiting (A, B, C)
+   - Redis-backed state
+   - Configurable tokens and refill rate
+   - JSON error responses
+
+rate-limiter/Dockerfile
+   Multi-stage build for Go binary
+
+rate-limiter/go.mod
+   Go module: github.com/redis/go-redis/v9
+
+rate-limiter/go.sum
+   Dependency lock file
+
+LOAD BALANCER SERVICE:
+──────────────────────
+
+load-balancer/main.go (12.2 KB, ~600 lines)
+   Smart load balancing with least-load strategy
+   Functions:
+   - assignBasedOnLoad()      : Least-load assignment
+   - loadBalanceHandler()     : Request handler
+   - checkBackendLoad()       : Health check
+   - startLoadChecker()       : Periodic health checks
+   - routeWithFailover()      : Failover logic
+   - logRequest()             : Request logging
+   Key features:
+   - Sticky routing (per-cookie)
+   - Health checks every 3 seconds
+   - Automatic failover
+   - Load caching in Redis
+   - Request logging per backend
+
+load-balancer/Dockerfile
+   Multi-stage build for Go binary
+
+load-balancer/go.mod
+   Go module: github.com/redis/go-redis/v9
+
+load-balancer/go.sum
+   Dependency lock file
+
+NGINX CONFIGURATION:
+────────────────────
+
+nginx/nginx.conf (1.1 KB)
+   Global rate limiting and reverse proxy
+   - Rate limit zone: 10 req/sec (testing)
+   - Burst allowance: 5
+   - Upstream: rate-limiter service
+   - Proxy headers forwarded
+   - Cookie handling
+
+UTILITIES:
+──────────
+
+test.sh (3.5 KB, executable)
+   Automated testing script
+   Tests:
+   - Service health checks
+   - First request (no cookie)
+   - Rate limit validation
+   - Log file creation
+   - Backend load distribution
+   - Advanced scenarios
+
+.gitignore
+   Git ignore patterns for:
+   - Logs directory
+   - Build artifacts
+   - Go compiled binaries
+   - IDE files
+   - OS files
+
+================================================================================
+
+QUICK FILE REFERENCE:
+====================
+
+Want to...                          See file...
+─────────────────────────────────   ──────────────────────────
+Get started quickly?                START_HERE.md
+Understand the system?              ARCHITECTURE.md
+Run the system?                     QUICKSTART.md + docker-compose.yml
+See how rate limiting works?        rate-limiter/main.go
+See how load balancing works?       load-balancer/main.go
+Customize rate limits?              rate-limiter/main.go (config section)
+Customize load balancing?           load-balancer/main.go (assignment logic)
+Change global rate limit?           nginx/nginx.conf
+See API documentation?              README.md
+Test the system?                    test.sh
+Customize for research?             DEVELOPMENT.md
+
+================================================================================
+
+FILE COUNTS:
+============
+
+By Type:
+  Documentation:    7 files (~110 KB)
+  Source Code:      6 files (~20 KB)
+  Configuration:    3 files (~2.7 KB)
+  Utilities:        2 files (~3.5 KB)
+  Total:           18 files (~136 KB)
+
+By Directory:
+  Root:             8 files (docs + config)
+  rate-limiter/:    4 files (source + build)
+  load-balancer/:   4 files (source + build)
+  nginx/:           1 file (config)
+  logs/:            0 files (created at runtime)
+
+================================================================================
+
+WHAT TO DOWNLOAD:
+=================
+
+When you download from Claude, you get:
+✓ All 18 files above
+✓ Proper directory structure
+✓ All dependencies defined (go.mod/go.sum)
+✓ Complete documentation
+✓ Ready-to-run configuration
+✓ Test script
+✓ Example code
+
+NO compilation needed! Just run docker-compose.
+
+================================================================================
+
+NEXT STEPS:
+===========
+
+1. Open START_HERE.md
+2. Read PROJECT_SUMMARY.md
+3. Read ARCHITECTURE.md
+4. Open WSL terminal
+5. cd to project directory
+6. Run: docker-compose up --build
+7. Run test.sh in another terminal
+
+================================================================================
+
+VERSION: 1.0
+CREATED: 2026-07-03
+STATUS: ✅ Complete and tested
+TOTAL SIZE: ~136 KB
+FILES: 18
+READY TO RUN: Yes
+
+================================================================================

@@ -1,0 +1,108 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: research-redis
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - research-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  rate-limiter:
+    build:
+      context: ./rate-limiter
+      dockerfile: Dockerfile
+    container_name: research-rate-limiter
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - LOAD_BALANCER_URL=http://load-balancer:8081
+      - LOG_DIR=/var/log/research
+    volumes:
+      - ./logs:/var/log/research
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - research-network
+
+  load-balancer:
+    build:
+      context: ./load-balancer
+      dockerfile: Dockerfile
+    container_name: research-load-balancer
+    ports:
+      - "127.0.0.1:8081:8081"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - LOG_DIR=/var/log/research
+      - BACKEND_A=http://backend-a:9001
+      - BACKEND_B=http://backend-b:9002
+      - BACKEND_C=http://backend-c:9003
+      - LOAD_CHECK_INTERVAL=3
+    volumes:
+      - ./logs:/var/log/research
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - research-network
+
+  backend-a:
+    build:
+      context: ./demo-backend
+      dockerfile: Dockerfile
+    container_name: research-backend-a
+    environment:
+      - BACKEND_NAME=A
+      - PORT=9001
+    networks:
+      - research-network
+
+  backend-b:
+    build:
+      context: ./demo-backend
+      dockerfile: Dockerfile
+    container_name: research-backend-b
+    environment:
+      - BACKEND_NAME=B
+      - PORT=9002
+    networks:
+      - research-network
+
+  backend-c:
+    build:
+      context: ./demo-backend
+      dockerfile: Dockerfile
+    container_name: research-backend-c
+    environment:
+      - BACKEND_NAME=C
+      - PORT=9003
+    networks:
+      - research-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: research-nginx
+    ports:
+      - "127.0.0.1:80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - rate-limiter
+    networks:
+      - research-network
+
+volumes:
+  redis-data:
+
+networks:
+  research-network:
+    driver: bridge

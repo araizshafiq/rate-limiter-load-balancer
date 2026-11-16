@@ -1,0 +1,27 @@
+# Logs
+logs/
+*.log
+
+# Build output
+rate-limiter/rate-limiter
+load-balancer/load-balancer
+
+# Go build output
+*.o
+*.a
+*.so
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+.env
+.env.local
